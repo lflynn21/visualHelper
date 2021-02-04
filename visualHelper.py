@@ -4,18 +4,30 @@ from azure.cognitiveservices.vision.computervision.models import VisualFeatureTy
 from msrest.authentication import CognitiveServicesCredentials
 
 import os
+from datetime import datetime
 from picamera import PiCamera
 from time import sleep
 from gtts import gTTS
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+
 
 language = 'en'
 camera = PiCamera()
+
 subscription_key = "bf269afc8c1d44ea95beae73a6fb1890"
 endpoint = "https://scenedetection.cognitiveservices.azure.com/"
 computervision_client = ComputerVisionClient(endpoint, CognitiveServicesCredentials(subscription_key))
 
 imagePath = "/home/pi/visualHelper/images/image.jpg"
 lastCaption = ""
+
+scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/auth/drive']
+creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
+client = gspread.authorize(creds)
+sheet = client.open("visualHelper Log")
+sheet_instance = sheet.get_worksheet(0)
+
 
 
 # Find the amount of similar words between two sentences and give it a similarity score from 0 to 1
@@ -57,6 +69,11 @@ while True:
                         os.system("mpg321 caption.mp3")
                     except:
                         print("Speaking failed")
+                    # Add caption to logs
+                    time = datetime.now()
+                    dt_string = time.strftime("%d-%m-%Y %H:%M:%S")
+                    log = [dt_string,caption.text]
+                    sheet_instance.append_row(log)
                     lastCaption = caption.text
     sleep(3)
 
