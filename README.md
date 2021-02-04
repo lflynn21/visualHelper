@@ -1,2 +1,2 @@
 # visualHelper
-Raspberry Pi aid for people with visual impairments
+Raspberry Pi program to aid people with visual impairments
