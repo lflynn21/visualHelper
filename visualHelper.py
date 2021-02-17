@@ -38,8 +38,18 @@ def get_similarity(str1, str2):
     return float(len(c)) / (len(a) + len(b) - len(c))
 
 
-print("===== Visual Helper Started =====")
+print("Entries with confidence below 0.35:")
+logData  = sheet_instance.get_all_records()
+for c in logData:
+    date = c["Date and Time"]
+    caption = c["Caption"]
+    score = float(c["Confidence"])
+    if score < 0.35:
+        print(f"{date}  {caption}  {score}" )
 
+print("")
+
+print("===== Visual Helper Started =====")
 while True:
     camera.capture(imagePath)
     imageHandler = open(imagePath, "rb")
@@ -72,8 +82,8 @@ while True:
                     # Add caption to logs
                     time = datetime.now()
                     dt_string = time.strftime("%d-%m-%Y %H:%M:%S")
-                    log = [dt_string,caption.text]
+                    confidence = "{:.2f}".format(caption.confidence)
+                    log = [dt_string,caption.text,confidence]
                     sheet_instance.append_row(log)
                     lastCaption = caption.text
     sleep(3)
-
