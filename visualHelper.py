@@ -31,11 +31,11 @@ sheet_instance = sheet.get_worksheet(0)
 
 
 # Find the amount of similar words between two sentences and give it a similarity score from 0 to 1
-def get_similarity(str1, str2):
-    a = set(str1.split())
-    b = set(str2.split())
-    c = a.intersection(b)
-    return float(len(c)) / (len(a) + len(b) - len(c))
+def get_similarity(prev, new):
+    previousCaption = set(prev.split())
+    newCaption = set(new.split())
+    intersection = previousCaption.intersection(newCaption)
+    return float(len(intersection)) / (len(previousCaption) + len(newCaption) - len(intersection))
 
 
 print("===== Visual Helper Started =====")
