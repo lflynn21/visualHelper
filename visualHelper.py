@@ -102,6 +102,7 @@ while True:
                     os.rename(imagePath, newPath)
                     confidence = "{:.2f}".format(caption.confidence) 
                     log = [dateString,caption.text,confidence,link]
+                    sheetInstance.append_row(log)
 
                     # Add new links to Apache site
                     linkFile = open("/var/www/html/index.html")
