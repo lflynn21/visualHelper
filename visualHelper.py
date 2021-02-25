@@ -33,7 +33,6 @@ sheet = client.open("visualHelper Log")
 sheetInstance = sheet.get_worksheet(0)
 
 
-
 # Find the amount of similar words between two sentences and give it a similarity score from 0 to 1
 def GetSimilarity(str1, str2):
     a = set(str1.split())
@@ -62,8 +61,6 @@ for c in logData:
     linkFile.write(f'<a href="{link}">{caption} on {date} with confidence {score}</a><p></p>\n')
 linkFile.write("</body>\n</html>")
 linkFile.close()
-    
-
 
 print("")
 
