@@ -4,7 +4,6 @@ from azure.cognitiveservices.vision.computervision.models import VisualFeatureTy
 from msrest.authentication import CognitiveServicesCredentials
 
 import os
-import socket
 from datetime import datetime
 from picamera import PiCamera
 from time import sleep
@@ -15,9 +14,6 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 language = 'en'
 camera = PiCamera()
-
-hostname = socket.gethostname()
-ip = socket.gethostbyname(hostname)
 
 subscription_key = "bf269afc8c1d44ea95beae73a6fb1890"
 endpoint = "https://scenedetection.cognitiveservices.azure.com/"
