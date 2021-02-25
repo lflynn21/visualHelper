@@ -4,6 +4,7 @@ from azure.cognitiveservices.vision.computervision.models import VisualFeatureTy
 from msrest.authentication import CognitiveServicesCredentials
 
 import os
+import socket
 from datetime import datetime
 from picamera import PiCamera
 from time import sleep
@@ -15,9 +16,12 @@ from oauth2client.service_account import ServiceAccountCredentials
 language = 'en'
 camera = PiCamera()
 
+hostname = socket.gethostname()
+ip = socket.gethostbyname(hostname)
+
 subscription_key = "bf269afc8c1d44ea95beae73a6fb1890"
 endpoint = "https://scenedetection.cognitiveservices.azure.com/"
-computervision_client = ComputerVisionClient(endpoint, CognitiveServicesCredentials(subscription_key))
+computervisionClient = ComputerVisionClient(endpoint, CognitiveServicesCredentials(subscription_key))
 
 imagePath = "/home/pi/visualHelper/images/image.jpg"
 lastCaption = ""
@@ -26,12 +30,12 @@ scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/aut
 creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
 client = gspread.authorize(creds)
 sheet = client.open("visualHelper Log")
-sheet_instance = sheet.get_worksheet(0)
+sheetInstance = sheet.get_worksheet(0)
 
 
 
 # Find the amount of similar words between two sentences and give it a similarity score from 0 to 1
-def get_similarity(str1, str2):
+def GetSimilarity(str1, str2):
     a = set(str1.split())
     b = set(str2.split())
     c = a.intersection(b)
@@ -39,13 +43,27 @@ def get_similarity(str1, str2):
 
 
 print("Entries with confidence below 0.35:")
-logData  = sheet_instance.get_all_records()
+logData  = sheetInstance.get_all_records()
 for c in logData:
     date = c["Date and Time"]
     caption = c["Caption"]
     score = float(c["Confidence"])
     if score < 0.35:
         print(f"{date}  {caption}  {score}" )
+
+#Get log file links and add to Apache site
+linkFile = open("/var/www/html/index.html", "w")
+linkFile.write("<html>\n<body>\n")
+for c in logData:
+    caption = c["Caption"]
+    date = c["Date and Time"]
+    link = c["Link"]
+    score = float(c["Confidence"])
+    linkFile.write(f'<a href="{link}">{caption} on {date} with confidence {score}</a><p></p>\n')
+linkFile.write("</body>\n</html>")
+linkFile.close()
+    
+
 
 print("")
 
@@ -56,21 +74,21 @@ while True:
 
     # Call computer vision api
     try:
-        description_results = computervision_client.describe_image_in_stream(imageHandler)
+        descriptionResults = computervisionClient.describe_image_in_stream(imageHandler)
     except:
         print("API call failed")
 
     # Process and speak the captions received
-    if len(description_results.captions) == 0:
+    if len(descriptionResults.captions) == 0:
         print("No description detected.")
 
     else:
-        for caption in description_results.captions:
+        for caption in descriptionResults.captions:
             if caption.confidence <= 0.1:
                 print("I'm not sure how to describe that photo. Please try again.")
 
             else:
-                if get_similarity(caption.text, lastCaption) < 0.6:
+                if GetSimilarity(caption.text, lastCaption) < 0.6:
                     print("'{}' with confidence {:.2f}%".format(caption.text, caption.confidence * 100))
                     try:
                         # Speak the caption
@@ -79,11 +97,26 @@ while True:
                         os.system("mpg321 caption.mp3")
                     except:
                         print("Speaking failed")
-                    # Add caption to logs
+                    # Add info to logs
                     time = datetime.now()
-                    dt_string = time.strftime("%d-%m-%Y %H:%M:%S")
-                    confidence = "{:.2f}".format(caption.confidence)
-                    log = [dt_string,caption.text,confidence]
-                    sheet_instance.append_row(log)
+                    dateString = time.strftime("%d-%m-%Y at %H:%M:%S")
+                    newPath = f"/var/www/html/vision/pics/{dateString}.jpg"
+                    link = f"/vision/pics/{dateString}.jpg"
+                    os.rename(imagePath, newPath)
+                    confidence = "{:.2f}".format(caption.confidence) 
+                    log = [dateString,caption.text,confidence,link]
+
+                    # Add new links to Apache site
+                    linkFile = open("/var/www/html/index.html")
+                    fileList = linkFile.readlines()
+                    linkFile.close()
+                    fileList = fileList[:-2]
+                    fileList.append(f'<a href="{link}">{caption.text} on {dateString} with confidence {confidence}</a><p></p>\n')
+                    fileList.append("</body>\n</html>")
+                    newLinks = "".join(fileList)
+                    linkFile = open("/var/www/html/index.html","w")
+                    linkFile.write(newLinks)
+                    linkFile.close()
+
                     lastCaption = caption.text
     sleep(3)
