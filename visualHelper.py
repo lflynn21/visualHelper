@@ -30,11 +30,11 @@ sheetInstance = sheet.get_worksheet(0)
 
 
 # Find the amount of similar words between two sentences and give it a similarity score from 0 to 1
-def GetSimilarity(str1, str2):
-    a = set(str1.split())
-    b = set(str2.split())
-    c = a.intersection(b)
-    return float(len(c)) / (len(a) + len(b) - len(c))
+def GetSimilarity(last, new):
+    wordsInLast = set(last.split())
+    wordsInNew = set(new.split())
+    commonWords = wordsInLast.intersection(wordsInNew)
+    return float(len(commonWords)) / (len(wordsInLast) + len(wordsInNew) - len(commonWords))
 
 
 print("Entries with confidence below 0.35:")
@@ -81,7 +81,7 @@ while True:
                 print("I'm not sure how to describe that photo. Please try again.")
 
             else:
-                if GetSimilarity(caption.text, lastCaption) < 0.6:
+                if GetSimilarity(lastCaption, caption.text) < 0.6:
                     print("'{}' with confidence {:.2f}%".format(caption.text, caption.confidence * 100))
                     try:
                         # Speak the caption
