@@ -47,16 +47,17 @@ for c in logData:
         print(f"{date}  {caption}  {score}" )
 
 #Get log file links and add to Apache site
-linkFile = open("/var/www/html/index.html", "w")
-linkFile.write("<html>\n<body>\n")
-for c in logData:
-    caption = c["Caption"]
-    date = c["Date and Time"]
-    link = c["Link"]
-    score = float(c["Confidence"])
-    linkFile.write(f'<a href="{link}">{caption} on {date} with confidence {score}</a><p></p>\n')
-linkFile.write("</body>\n</html>")
-linkFile.close()
+#linkFile = open("/var/www/html/links.txt", "w")
+#descriptionsFile = open("/var/www/html/descriptions.txt", "w")
+#for c in logData:
+#    caption = c["Caption"]
+#    date = c["Date and Time"]
+#    link = c["Link"]
+#    score = float(c["Confidence"])
+#    descriptionsFile.write(f'{caption} on {date} with confidence {score}\n')
+#    linkFile.write(f'{link}\n')
+#linkFile.close()
+#descriptionsFile.close()
 
 print("")
 
@@ -74,7 +75,6 @@ while True:
     # Process and speak the captions received
     if len(descriptionResults.captions) == 0:
         print("No description detected.")
-
     else:
         for caption in descriptionResults.captions:
             if caption.confidence <= 0.1:
@@ -101,16 +101,12 @@ while True:
                     sheetInstance.append_row(log)
 
                     # Add new links to Apache site
-                    linkFile = open("/var/www/html/index.html")
-                    fileList = linkFile.readlines()
+                    linkFile = open("/var/www/html/links.txt", "a")
+                    descriptionFile = open("/var/www/html/descriptions.txt", "a")
+                    descriptionFile.write(f"{caption.text} on {dateString} with confidence {confidence}\n")
+                    linkFile.write(f"{link}\n")
                     linkFile.close()
-                    fileList = fileList[:-2]
-                    fileList.append(f'<a href="{link}">{caption.text} on {dateString} with confidence {confidence}</a><p></p>\n')
-                    fileList.append("</body>\n</html>")
-                    newLinks = "".join(fileList)
-                    linkFile = open("/var/www/html/index.html","w")
-                    linkFile.write(newLinks)
-                    linkFile.close()
+                    descriptionFile.close()
 
                     lastCaption = caption.text
     sleep(3)
